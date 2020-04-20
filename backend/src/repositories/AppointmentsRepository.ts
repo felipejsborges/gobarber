@@ -1,38 +1,18 @@
-import { isEqual } from 'date-fns';
+import { EntityRepository, Repository } from 'typeorm';
+
 import Appointment from '../models/Appointment';
 
-// We need to create a interface to define the type of the data we are receiving when we create a new appointment
-interface CreateAppointmentDTO {
-	provider: string;
-	date: Date;
-}
-
-class AppointmentsRepository {
-	private appointments: Appointment[]; // I'm saying that appointments is an array of Appointment type (defined in models/appointment) and starts empty []. This is private because only our methods of this class can access this information. Other files will have access to the methods, not the saved data
-
-	constructor() {
-		this.appointments = []; // initialing the array appointments
-	}
-
-	// creating a method to return all booked appointments
-	public all(): Appointment[] {
-		return this.appointments;
-	}
-
-	public findByDate(date: Date): Appointment | null {
+@EntityRepository(Appointment) // its a repository of a model (models/Appointment)
+class AppointmentsRepository extends Repository<Appointment> {
+	public async findByDate(date: Date): Promise<Appointment | null> {
+		// since it's an asynchronous function, we need to set the return type as a promise, and its promise will have the type Appointment or null
 		// verifying if date exists in other appointment
-		const findAppointment = this.appointments.find(appointment =>
-			isEqual(date, appointment.date),
-		);
+		const findAppointment = await this.findOne({
+			where: { date },
+			// this is short syntax of date: date, what means that it will find one appointment where the colum date contains the value 'date'
+		});
+		// this function above has to be async/await because i have to access the DB. findOne is a function of Repository, and, in this case, will find an appointment where date = date
 		return findAppointment || null; // the two vertical bars means like an else inside an if -> if findAppointment exists, return it, if not, return 'null'
-	}
-
-	// create a method to create a new appointment using the CreateAppointmentDTO interface that was created before to initialize this class
-	public create({ provider, date }: CreateAppointmentDTO): Appointment {
-		// creating appointment data:
-		const appointment = new Appointment({ provider, date });
-		this.appointments.push(appointment); // putting appointment in the end of appointments array
-		return appointment;
 	}
 }
 

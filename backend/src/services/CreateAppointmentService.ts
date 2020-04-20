@@ -1,4 +1,6 @@
 import { startOfHour } from 'date-fns';
+import { getCustomRepository } from 'typeorm'; // getCustomRepository is used to import the functions of Repository class that is extending on repositories/AppointmentsRepository.ts
+
 import Appointment from '../models/Appointment';
 import AppointmentsRepository from '../repositories/AppointmentsRepository';
 
@@ -9,18 +11,13 @@ interface Request {
 }
 
 class CreateAppointmentService {
-	// Here I will need to access the AppointmentsRepository. If I start a new (new AppointmentsRepository()), its gonna be diferente from the other created in appointment.routes. So I have to receive it as a param of the constructor method of my class
-	private appointmentsRepository: AppointmentsRepository; // Im creating a private var. I will call it in the constructor function:
-
-	constructor(appointmentsRepository: AppointmentsRepository) {
-		this.appointmentsRepository = appointmentsRepository; // Setting my previous created var with the appointmentsRepository that arrived by this constructor arg
-	}
-
 	// A service has only ONE method. This method is 'execute'. It means: Im executing a unique method. It has to be public because I will call it in another file
-	public execute({ provider, date }: Request): Appointment {
+	public async execute({ provider, date }: Request): Promise<Appointment> {
+		const appointmentsRepository = getCustomRepository(AppointmentsRepository); // now I can use function of Repository using appointmentsRepository.(ctrl+space)
+
 		const appointmentDate = startOfHour(date); // Im not just handle the info, Im saying that a appointment can be booked only in full hour (17h, 18h, etc). This is a business rule, so couldnt stay on routes file
 
-		const findAppointmentInSameDate = this.appointmentsRepository.findByDate(
+		const findAppointmentInSameDate = await appointmentsRepository.findByDate(
 			appointmentDate,
 		);
 
@@ -29,10 +26,11 @@ class CreateAppointmentService {
 			throw Error('This appointment is already booked'); // this Error class is a global class that returns a message. Its a string and your content is what we set inside the () of Error. So, in that case, We have this Error returning message: 'This appointment is already booked'
 		}
 
-		const appointment = this.appointmentsRepository.create({
+		const appointment = appointmentsRepository.create({
 			provider,
 			date: appointmentDate,
 		}); // Im sending params to appointmentsRepository class of models/appointmentsRepository and instancing appointment as the return this method
+		await appointmentsRepository.save(appointment); // the created method on Repository class only creates, so I need to save it
 		return appointment;
 	}
 }
