@@ -4,7 +4,7 @@ import { verify } from 'jsonwebtoken'; // verify is a method to verify if token 
 import authConfig from '@config/auth'; // importing auth cfg
 import AppError from '@shared/errors/AppError';
 
-interface TokenPayload {
+interface ITokenPayload {
 	iat: number;
 	exp: number;
 	sub: string;
@@ -25,7 +25,7 @@ export default function ensureAuthenticated(
 
 	const decoded = verify(token, authConfig.jwt.secret);
 	// the verify returns a string or an object, and it bugs the system, so I have to force it return to a type: TokenPayload in this case:
-	const { sub } = decoded as TokenPayload;
+	const { sub } = decoded as ITokenPayload;
 
 	request.user = {
 		// user is a type I declared inside express types. Now Im setting it with sub (user id). And I can access this information in every route that this middleware is used
