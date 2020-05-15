@@ -1,8 +1,10 @@
-import { getRepository, Repository } from 'typeorm';
+import { getRepository, Repository, Raw } from 'typeorm';
 
 import IAppointmentsRepository from '@modules/appointments/repositories/IAppointmentsRepository';
 import Appointment from '@modules/appointments/infra/typeorm/entities/Appointment';
 import ICreateAppointmentDTO from '@modules/appointments/dtos/ICreateAppointmentDTO';
+import IFindAllInMonthFromProviderDTO from '@modules/appointments/dtos/IFindAllInMonthFromProviderDTO';
+import IFindAllInDayFromProviderDTO from '@modules/appointments/dtos/IFindAllInDayFromProviderDTO';
 
 class AppointmentsRepository implements IAppointmentsRepository {
 	private ormRepository: Repository<Appointment>;
@@ -20,6 +22,48 @@ class AppointmentsRepository implements IAppointmentsRepository {
 		});
 		// this function above has to be async/await because i have to access the DB. findOne is a function of Repository, and, in this case, will find an appointment where date = date
 		return findAppointment; // the two vertical bars means like an else inside an if -> if findAppointment exists, return it, if not, return 'null'
+	}
+
+	public async findAllInMonthFromProvider({
+		provider_id,
+		month,
+		year,
+	}: IFindAllInMonthFromProviderDTO): Promise<Appointment[]> {
+		const parsedMonth = String(month).padStart(2, '0'); // adding a '0' before the 1 algarisms months
+
+		const appointments = await this.ormRepository.find({
+			where: {
+				provider_id,
+				date: Raw(
+					dateFieldName =>
+						`to_char(${dateFieldName}, 'MM-YYYY')= '${parsedMonth}-${year}`,
+				),
+			},
+		});
+
+		return appointments;
+	}
+
+	public async findAllInDayFromProvider({
+		provider_id,
+		day,
+		month,
+		year,
+	}: IFindAllInDayFromProviderDTO): Promise<Appointment[]> {
+		const parsedDay = String(day).padStart(2, '0');
+		const parsedMonth = String(month).padStart(2, '0'); // adding a '0' before the 1 algarisms months
+
+		const appointments = await this.ormRepository.find({
+			where: {
+				provider_id,
+				date: Raw(
+					dateFieldName =>
+						`to_char(${dateFieldName}, 'DD-MM-YYYY')= '${parsedDay}-${parsedMonth}-${year}`,
+				),
+			},
+		});
+
+		return appointments;
 	}
 
 	public async create({
