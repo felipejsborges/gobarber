@@ -1,4 +1,4 @@
-import { startOfHour } from 'date-fns';
+import { startOfHour, isBefore, getHours } from 'date-fns';
 import { injectable, inject } from 'tsyringe';
 
 import AppError from '@shared/errors/AppError';
@@ -8,6 +8,7 @@ import IAppointmentsRepository from '../repositories/IAppointmentsRepository';
 // I need to set the request (info that is ariving inside of this service file) type
 interface IRequest {
 	provider_id: string;
+	user_id: string;
 	date: Date;
 }
 
@@ -19,8 +20,28 @@ class CreateAppointmentService {
 	) {}
 
 	// A service has only ONE method. This method is 'execute'. It means: Im executing a unique method. It has to be public because I will call it in another file
-	public async execute({ provider_id, date }: IRequest): Promise<Appointment> {
+	public async execute({
+		provider_id,
+		user_id,
+		date,
+	}: IRequest): Promise<Appointment> {
 		const appointmentDate = startOfHour(date); // Im not just handle the info, Im saying that a appointment can be booked only in full hour (17h, 18h, etc). This is a business rule, so couldnt stay on routes file
+
+		if (isBefore(appointmentDate, Date.now())) {
+			throw new AppError("You can't create an appointment on a past date");
+		}
+
+		if (user_id === provider_id) {
+			throw new AppError(
+				"You can't create an appointment with same user as provider",
+			);
+		}
+
+		if (getHours(appointmentDate) < 8 || getHours(appointmentDate) > 17) {
+			throw new AppError(
+				'You can only create an appointment between 8am and 5pm',
+			);
+		}
 
 		const findAppointmentInSameDate = await this.appointmentsRepository.findByDate(
 			appointmentDate,
@@ -33,6 +54,7 @@ class CreateAppointmentService {
 
 		const appointment = await this.appointmentsRepository.create({
 			provider_id,
+			user_id,
 			date: appointmentDate,
 		}); // Im sending params to appointmentsRepository class of models/appointmentsRepository and instancing appointment as the return this method
 

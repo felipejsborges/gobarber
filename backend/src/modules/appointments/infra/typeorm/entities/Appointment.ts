@@ -24,6 +24,13 @@ class Appointment {
 	@JoinColumn({ name: 'provider_id' }) // The column of User is name and it is relationing with provider_id colum of this file
 	provider: User; // We set this to access info of User between the appointment
 
+	@Column()
+	user_id: string;
+
+	@ManyToOne(() => User)
+	@JoinColumn({ name: 'user_id' })
+	user: User;
+
 	@Column('timestamp with time zone')
 	date: Date;
 
