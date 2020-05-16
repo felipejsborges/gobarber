@@ -1,8 +1,9 @@
-import { startOfHour, isBefore, getHours } from 'date-fns';
+import { startOfHour, isBefore, getHours, format } from 'date-fns';
 import { injectable, inject } from 'tsyringe';
 
 import AppError from '@shared/errors/AppError';
 import Appointment from '@modules/appointments/infra/typeorm/entities/Appointment';
+import INotificationsRepository from '@modules/notifications/repositories/INotificationsRepository';
 import IAppointmentsRepository from '../repositories/IAppointmentsRepository';
 
 // I need to set the request (info that is ariving inside of this service file) type
@@ -17,6 +18,9 @@ class CreateAppointmentService {
 	constructor(
 		@inject('AppointmentsRepository')
 		private appointmentsRepository: IAppointmentsRepository,
+
+		@inject('NotificationsRepository')
+		private notificationsRepository: INotificationsRepository,
 	) {}
 
 	// A service has only ONE method. This method is 'execute'. It means: Im executing a unique method. It has to be public because I will call it in another file
@@ -57,6 +61,13 @@ class CreateAppointmentService {
 			user_id,
 			date: appointmentDate,
 		}); // Im sending params to appointmentsRepository class of models/appointmentsRepository and instancing appointment as the return this method
+
+		const dateFormated = format(appointmentDate, "dd/MM/yyy 'às' HH'h'mm'min'"); // double quotes to set the date type and simple quotes to scape text from date format
+
+		await this.notificationsRepository.create({
+			recipient_id: provider_id,
+			content: `Novo agendamento para o dia ${dateFormated}`,
+		});
 
 		return appointment;
 	}
