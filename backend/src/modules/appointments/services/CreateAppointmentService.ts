@@ -4,6 +4,7 @@ import { injectable, inject } from 'tsyringe';
 import AppError from '@shared/errors/AppError';
 import Appointment from '@modules/appointments/infra/typeorm/entities/Appointment';
 import INotificationsRepository from '@modules/notifications/repositories/INotificationsRepository';
+import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 import IAppointmentsRepository from '../repositories/IAppointmentsRepository';
 
 // I need to set the request (info that is ariving inside of this service file) type
@@ -21,6 +22,9 @@ class CreateAppointmentService {
 
 		@inject('NotificationsRepository')
 		private notificationsRepository: INotificationsRepository,
+
+		@inject('CacheProvider')
+		private cacheProvider: ICacheProvider,
 	) {}
 
 	// A service has only ONE method. This method is 'execute'. It means: Im executing a unique method. It has to be public because I will call it in another file
@@ -68,6 +72,13 @@ class CreateAppointmentService {
 			recipient_id: provider_id,
 			content: `Novo agendamento para o dia ${dateFormated}`,
 		});
+
+		await this.cacheProvider.invalidate(
+			`provider-appointments:${provider_id}:${format(
+				appointmentDate,
+				'yyyy-M-d',
+			)}`,
+		);
 
 		return appointment;
 	}
