@@ -8,7 +8,7 @@ import UsersController from '../controllers/UsersController';
 import UserAvatarController from '../controllers/UserAvatarController';
 
 const usersRouter = Router();
-const upload = multer(uploadConfig); // now our upload configuration turn in a middleware of multer. So we can use it in a route
+const upload = multer(uploadConfig.multer); // now our upload configuration turn in a middleware of multer. So we can use it in a route
 const usersController = new UsersController();
 const userAvatarController = new UserAvatarController();
 
