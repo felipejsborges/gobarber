@@ -13,11 +13,14 @@ class AppointmentsRepository implements IAppointmentsRepository {
 		this.ormRepository = getRepository(Appointment);
 	}
 
-	public async findByDate(date: Date): Promise<Appointment | undefined> {
+	public async findByDate(
+		date: Date,
+		provider_id: string,
+	): Promise<Appointment | undefined> {
 		// since it's an asynchronous function, we need to set the return type as a promise, and its promise will have the type Appointment or null
 		// verifying if date exists in other appointment
 		const findAppointment = await this.ormRepository.findOne({
-			where: { date },
+			where: { date, provider_id },
 			// this is short syntax of date: date, what means that it will find one appointment where the colum date contains the value 'date'
 		});
 		// this function above has to be async/await because i have to access the DB. findOne is a function of Repository, and, in this case, will find an appointment where date = date
@@ -61,6 +64,7 @@ class AppointmentsRepository implements IAppointmentsRepository {
 						`to_char(${dateFieldName}, 'DD-MM-YYYY')= '${parsedDay}-${parsedMonth}-${year}'`,
 				),
 			},
+			relations: ['user'],
 		});
 
 		return appointments;

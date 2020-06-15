@@ -53,6 +53,7 @@ class CreateAppointmentService {
 
 		const findAppointmentInSameDate = await this.appointmentsRepository.findByDate(
 			appointmentDate,
+			provider_id,
 		);
 
 		// if exists an appointment in the same date/hour, the findByDate method of appointmentsRepository class of models/appointmentsRepository will return it, if not, will return 'null'. So I check if findAppointment exists, and if its true, I return an error:
