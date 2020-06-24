@@ -1,5 +1,4 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
 import { useNavigation } from '@react-navigation/native';
@@ -32,7 +31,7 @@ export interface Provider {
 const Dashboard: React.FC = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
 
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const { navigate } = useNavigation();
 
   useEffect(() => {
@@ -93,8 +92,6 @@ const Dashboard: React.FC = () => {
           </ProviderContainer>
         )}
       />
-
-      <Button title="Sair" onPress={signOut} />
     </Container>
   );
 };
